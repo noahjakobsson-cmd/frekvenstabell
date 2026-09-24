@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Frekvenstabell-träning</title>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f5ff;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+.spel {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: #333;
+}
+
+#poang {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.info {
+    background: #eef1ff;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    font-size: 18px;
+}
+
+th, td {
+    border: 2px solid #555;
+    padding: 10px 15px;
+}
+
+th {
+    background: #e8ecff;
+}
+
+.produkt-input {
+    width: 80px;
+    padding: 8px;
+    font-size: 17px;
+    text-align: center;
+    border: 2px solid #aaa;
+    border-radius: 8px;
+}
+
+.sum-input {
+    width: 80px;
+    padding: 8px;
+    font-size: 17px;
+    text-align: center;
+    border: 2px solid #aaa;
+    border-radius: 8px;
+}
+
+.ordning-box {
+    margin: 20px auto;
+    max-width: 750px;
+}
+
+.ordning-box label {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.hjalptext {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.storleksordning {
+    width: 90%;
+    min-height: 70px;
+    padding: 12px;
+    font-size: 18px;
+    border: 2px solid #aaa;
+    border-radius: 10px;
+    text-align: left;
+    resize: vertical;
+}
+
+#fraga {
+    margin-top: 30px;
+    font-size: 18px;
+}
+
+.svarInput {
+    font-size: 20px;
+    padding: 10px;
+    width: 220px;
+    text-align: center;
+    border: 2px solid #aaa;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+button {
+    margin-top: 15px;
+    padding: 12px 25px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    background: #4d6cff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #354fd1;
+}
+
+#resultat {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+    min-height: 30px;
+}
+
+.ratt {
+    color: green;
+}
+
+.fel {
+    color: red;
+}
+
+.fraga-typ {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="spel">
+
+<h1>📊 Frekvenstabell-träning</h1>
+
+<div id="poang">
+    Poäng: 0
+</div>
+
+
+<div class="info">
+
+<b>Hjälpmedel:</b><br>
+
+✖️ Värde × frekvens är frivilligt.<br>
+
+➕ Summorna är frivilliga.<br>
+
+🔢 Storleksordningen är frivillig.<br>
+
+🎯 Du behöver bara svara på frågan!
+
+</div>
+
+
+<!-- TABELL -->
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Värde</th>
+
+<th>Frekvens</th>
+
+<th>Värde × frekvens</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="tabell">
+</tbody>
+
+
+<tfoot>
+
+<tr>
+
+<th>Summa</th>
+
+<td>
+
+<input
+    class="sum-input"
+    type="number"
+    id="sumFrekvens"
+    placeholder="?"
+>
+
+</td>
+
+<td>
+
+<input
+    class="sum-input"
+    type="number"
+    id="sumProdukt"
+    placeholder="?"
+>
+
+</td>
+
+</tr>
+
+</tfoot>
+
+</table>
+
+
+<!-- STORLEKSORDNING -->
+
+<div class="ordning-box">
+
+<label>
+🔢 Storleksordning
+</label>
+
+<div class="hjalptext">
+Frivilligt hjälpmedel för medianen.
+</div>
+
+<textarea
+    class="storleksordning"
+    id="ordning"
+    placeholder="Exempel: 2, 2, 2, 5, 5, 8"
+></textarea>
+
+</div>
+
+
+<!-- FRÅGA -->
+
+<div id="fraga"></div>
+
+
+<input
+    class="svarInput"
+    type="text"
+    id="svar"
+    placeholder="Skriv ditt svar"
+    autocomplete="off"
+>
+
+
+<br>
+
+
+<button onclick="lamnaIn()">
+    Lämna in
+</button>
+
+
+<div id="resultat"></div>
+
+</div>
+
+
+<script>
+
+
+// ======================================
+// VARIABLER
+// ======================================
+
+let poang = 0;
+
+let rattSvar = "";
+
+let typ = "";
+
+let data = [];
+
+
+// ======================================
+// SLUMPTAL
+// ======================================
+
+function slump(min, max) {
+
+    return Math.floor(
+        Math.random() * (max - min + 1)
+    ) + min;
+
+}
+
+
+// ======================================
+// SKAPA NY UPPGIFT
+// ======================================
+
+function skapaUppgift() {
+
+    document.getElementById("resultat").innerHTML = "";
+
+    document.getElementById("svar").value = "";
+
+    document.getElementById("sumFrekvens").value = "";
+
+    document.getElementById("sumProdukt").value = "";
+
+    document.getElementById("ordning").value = "";
+
+    data = [];
+
+
+    // Antal olika värden
+
+    let antalRader = slump(3, 5);
+
+    let anvandaVarden = [];
+
+
+    // ======================================
+    // SKAPA VÄRDEN
+    // ======================================
+
+    for (
+        let i = 0;
+        i < antalRader;
+        i++
+    ) {
+
+        let varde;
+
+        do {
+
+            varde = slump(1, 10);
+
+        }
+
+        while (
+            anvandaVarden.includes(varde)
+        );
+
+
+        anvandaVarden.push(varde);
+
+
+        data.push({
+
+            varde: varde,
+
+            frekvens: slump(1, 4)
+
+        });
+
+    }
+
+
+    // Sortera värden
+
+    data.sort(
+        (a, b) => a.varde - b.varde
+    );
+
+
+    // ======================================
+    // VISA TABELLEN
+    // ======================================
+
+    let tabell =
+        document.getElementById("tabell");
+
+    tabell.innerHTML = "";
+
+
+    data.forEach(
+        (rad, index) => {
+
+            tabell.innerHTML += `
+
+            <tr>
+
+                <td>
+                    ${rad.varde}
+                </td>
+
+                <td>
+                    ${rad.frekvens}
+                </td>
+
+                <td>
+
+                    <input
+                        class="produkt-input"
+                        type="number"
+                        id="produkt${index}"
+                        placeholder="?"
+                    >
+
+                </td>
+
+            </tr>
+
+            `;
+
+        }
+    );
+
+
+    // ======================================
+    // SKAPA ALLA TAL
+    // ======================================
+
+    let allaTal = [];
+
+
+    data.forEach(
+        rad => {
+
+            for (
+                let i = 0;
+                i < rad.frekvens;
+                i++
+            ) {
+
+                allaTal.push(rad.varde);
+
+            }
+
+        }
+    );
+
+
+    // ======================================
+    // SLUMPA FRÅGETYP
+    // ======================================
+
+    let slumpFraga = slump(1, 7);
+
+
+    // ======================================
+    // MEDELVÄRDE
+    // ======================================
+
+    if (slumpFraga === 1) {
+
+        typ = "medelvärde";
+
+
+        let summa = 0;
+
+
+        allaTal.forEach(
+            tal => {
+
+                summa += tal;
+
+            }
+        );
+
+
+        rattSvar =
+            summa / allaTal.length;
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Räknefråga</div>" +
+            "<h3>📈 Vad är medelvärdet?</h3>";
+
+    }
+
+
+    // ======================================
+    // MEDIAN
+    // ======================================
+
+    else if (slumpFraga === 2) {
+
+        typ = "median";
+
+
+        let mitten =
+            Math.floor(
+                allaTal.length / 2
+            );
+
+
+        if (
+            allaTal.length % 2 === 1
+        ) {
+
+            rattSvar =
+                allaTal[mitten];
+
+        }
+
+        else {
+
+            rattSvar =
+                (
+                    allaTal[mitten - 1] +
+                    allaTal[mitten]
+                ) / 2;
+
+        }
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Räknefråga</div>" +
+            "<h3>🔢 Vad är medianen?</h3>";
+
+    }
+
+
+    // ======================================
+    // TYPVÄRDE
+    // ======================================
+
+    else if (slumpFraga === 3) {
+
+        typ = "typvärde";
+
+
+        let hogstaFrekvens = 0;
+
+        let typvarden = [];
+
+
+        data.forEach(
+            rad => {
+
+                if (
+                    rad.frekvens >
+                    hogstaFrekvens
+                ) {
+
+                    hogstaFrekvens =
+                        rad.frekvens;
+
+                    typvarden = [
+                        rad.varde
+                    ];
+
+                }
+
+                else if (
+                    rad.frekvens ===
+                    hogstaFrekvens
+                ) {
+
+                    typvarden.push(
+                        rad.varde
+                    );
+
+                }
+
+            }
+        );
+
+
+        // Om flera har samma högsta frekvens
+        // väljer vi ett av dem slumpmässigt.
+
+        rattSvar =
+            typvarden[
+                slump(0, typvarden.length - 1)
+            ];
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Skriftlig fråga</div>" +
+            "<h3>⭐ Vilket värde är typvärdet?</h3>";
+
+    }
+
+
+    // ======================================
+    // TOTALT ANTAL OBSERVATIONER
+    // ======================================
+
+    else if (slumpFraga === 4) {
+
+        typ = "antal";
+
+
+        let totalt = 0;
+
+
+        data.forEach(
+            rad => {
+
+                totalt += rad.frekvens;
+
+            }
+        );
+
+
+        rattSvar = totalt;
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Skriftlig fråga</div>" +
+            "<h3>🔢 Hur många observationer finns det totalt?</h3>";
+
+    }
+
+
+    // ======================================
+    // HÖGST FREKVENS
+    // ======================================
+
+    else if (slumpFraga === 5) {
+
+        typ = "hogst";
+
+
+        let hogstaFrekvens = 0;
+
+        let varden = [];
+
+
+        data.forEach(
+            rad => {
+
+                if (
+                    rad.frekvens >
+                    hogstaFrekvens
+                ) {
+
+                    hogstaFrekvens =
+                        rad.frekvens;
+
+                    varden = [
+                        rad.varde
+                    ];
+
+                }
+
+                else if (
+                    rad.frekvens ===
+                    hogstaFrekvens
+                ) {
+
+                    varden.push(
+                        rad.varde
+                    );
+
+                }
+
+            }
+        );
+
+
+        rattSvar =
+            varden[
+                slump(0, varden.length - 1)
+            ];
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Skriftlig fråga</div>" +
+            "<h3>⬆️ Vilket värde har högst frekvens?</h3>";
+
+    }
+
+
+    // ======================================
+    // LÄGST FREKVENS
+    // ======================================
+
+    else if (slumpFraga === 6) {
+
+        typ = "lagst";
+
+
+        let lagstaFrekvens =
+            Math.min(
+                ...data.map(
+                    rad => rad.frekvens
+                )
+            );
+
+
+        let varden = data.filter(
+            rad =>
+                rad.frekvens ===
+                lagstaFrekvens
+        );
+
+
+        rattSvar =
+            varden[
+                slump(0, varden.length - 1)
+            ].varde;
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Skriftlig fråga</div>" +
+            "<h3>⬇️ Vilket värde har lägst frekvens?</h3>";
+
+    }
+
+
+    // ======================================
+    // VARIATIONSBREDD
+    // ======================================
+
+    else {
+
+        typ = "variationsbredd";
+
+
+        let minsta =
+            Math.min(
+                ...data.map(
+                    rad => rad.varde
+                )
+            );
+
+
+        let storsta =
+            Math.max(
+                ...data.map(
+                    rad => rad.varde
+                )
+            );
+
+
+        rattSvar =
+            storsta - minsta;
+
+
+        document.getElementById("fraga").innerHTML =
+
+            "<div class='fraga-typ'>Skriftlig fråga</div>" +
+            "<h3>📏 Vad är variationsbredden?</h3>";
+
+    }
+
+}
+
+
+// ======================================
+// KONTROLLERA SVARET
+// ======================================
+
+function lamnaIn() {
+
+
+    let anvandarSvar =
+        document.getElementById("svar")
+        .value
+        .trim()
+        .replace(",", ".");
+
+
+    let resultat =
+        document.getElementById("resultat");
+
+
+    // Om inget svar
+
+    if (
+        anvandarSvar === ""
+    ) {
+
+        resultat.innerHTML =
+
+            "<span class='fel'>" +
+            "✏️ Skriv ett svar först!" +
+            "</span>";
+
+        return;
+
+    }
+
+
+    let numerisktSvar =
+        parseFloat(anvandarSvar);
+
+
+    // ======================================
+    // KONTROLL AV SIFFERSVAR
+    // ======================================
+
+    if (
+        !isNaN(numerisktSvar)
+        &&
+        Math.abs(
+            numerisktSvar - rattSvar
+        ) < 0.001
+    ) {
+
+        ratt();
+
+        return;
+
+    }
+
+
+    // ======================================
+    // KONTROLL AV TEXTSVAR
+    // ======================================
+
+    let textSvar =
+        anvandarSvar
+        .toLowerCase()
+        .trim();
+
+
+    let rattText =
+        String(rattSvar)
+        .toLowerCase()
+        .trim();
+
+
+    if (
+        textSvar === rattText
+    ) {
+
+        ratt();
+
+        return;
+
+    }
+
+
+    // ======================================
+    // FEL SVAR
+    // ======================================
+
+    resultat.innerHTML =
+
+        "<span class='fel'>" +
+        "❌ Inte riktigt. Försök igen!" +
+        "</span>";
+
+}
+
+
+// ======================================
+// RÄTT SVAR
+// ======================================
+
+function ratt() {
+
+    let resultat =
+        document.getElementById("resultat");
+
+
+    poang++;
+
+
+    resultat.innerHTML =
+
+        "<span class='ratt'>" +
+        "✅ Rätt! +1 poäng!" +
+        "</span>";
+
+
+    document.getElementById("poang").innerHTML =
+
+        "Poäng: " + poang;
+
+
+    // Ny uppgift efter 1,2 sekunder
+
+    setTimeout(
+        skapaUppgift,
+        1200
+    );
+
+}
+
+
+// ======================================
+// STARTA SPELET
+// ======================================
+
+skapaUppgift();
+
+</script>
+
+</body>
+</html>
